@@ -516,3 +516,17 @@ def get_available_gpus():
   """
   local_device_protos = device_lib.list_local_devices()
   return [x.name for x in local_device_protos if x.device_type == 'GPU']
+
+
+class HeReLuNormalInitializer(tf.initializers.random_normal):
+  def __init__(self, dtype=tf.float32):
+    super(HeReLuNormalInitializer, self).__init__(dtype=dtype)
+
+  def get_config(self):
+    return dict(dtype=self.dtype.name)
+
+  def __call__(self, shape, dtype=None, partition_info=None):
+    del partition_info
+    dtype = self.dtype if dtype is None else dtype
+    std = tf.rsqrt(tf.cast(tf.reduce_prod(shape[:-1]), tf.float32) + 1e-7)
+    return tf.random_normal(shape, stddev=std, dtype=dtype)
